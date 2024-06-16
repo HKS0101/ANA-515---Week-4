@@ -1,0 +1,107 @@
+---
+title: "Assignment - Week 4"
+author: "Humpreet Sahans"
+date: "2024-06-14"
+output: word_document
+theme: lumen
+---
+
+```{r setup, include=FALSE}
+
+library(dplyr)
+library(knitr)
+library(readr)
+```
+
+#Section 1: Description of the data
+-----------------------------------------------------------------------------------------
+
+This assignment uses the Biopics dataset, which is sourced from IMDB and publicly available on Github via FiveThirtyEight.
+
+It is a comprehensive collection of information about 761 biographical movies. Each row contains a distinct film title, a URL to its IMDB page, the country of origin, release dates, actors cast, gross earnings at the US box office and information about the subjects on which the films are based. The data is stored in a CSV file i.e. structured as plain text with comma delimiters.
+
+The purpose of collecting this data was to analyze trends and patterns in the production of biographical films, especially in terms of diversity and representation. Researchers can use this data to explore the racial and gender diversity among biopic subjects, examine the correlation between box office earnings and the subject's characteristics, or address other related research questions.
+
+#Section 2: Reading the data
+-----------------------------------------------------------------------------------------
+```{r, echo = TRUE}
+
+#Reading data into a table from the csv file using the function 'read.csv'. This is a base R function that is used to read comma-separated values. There were no empty rows in our dataset and all 761 entries were read.
+
+url <- "https://github.com/fivethirtyeight/data/raw/master/biopics/biopics.csv"
+biopics <- read.csv(url)
+
+```
+
+#Section 3: Cleaning the data
+-----------------------------------------------------------------------------------------
+```{r, echo = TRUE}
+
+#Renaming the data for consistency and better clarity
+re_biopics <- biopics %>%
+  rename(
+     "year_of_release" = year_release,
+    "subject_gender" = subject_sex,
+    "name_of_lead_actor" = lead_actor_actress
+  ) %>%
+
+#Filtering the renamed data table by removing columns that don't add much value
+  select(-site, -race_known) %>%
+
+#Replacing the '-' with '0' in the column 'box_office' & Converting currency data to numeric values by removing alphabets; the values are in Millions
+  mutate( box_office = ifelse(box_office == '-', "0", box_office),
+          box_office = parse_number(box_office))
+
+```
+
+#Section 4: Characteristics of the (filtered) data
+-----------------------------------------------------------------------------------------
+This dataframe has `r nrow(re_biopics)` rows and `r ncol(re_biopics)` columns. The names of the columns and a brief description of each are in the table below:
+
+```{r, echo = TRUE, results = TRUE}
+
+columns_summary <- data.frame(
+    Columns = c(colnames(re_biopics)),
+    Description = c("Title of the film", "Country of origin", "Year of release", "Gross earnings at U.S. box office", "Director of the film", "Number of subjects featured in the film", "Actual name of the featured subject", "The Occupation or reason for the recognition of the subject","Race of the subject", "Dummy variable that indicates person of color", "Gender of the subject", "Name of the lead actor or actress who played the subject")
+)
+
+kable(columns_summary, caption = "Biopics Variables & Definitions")
+
+```
+
+#Section 5: Summary Statistics
+-----------------------------------------------------------------------------------------
+```{r, echo = TRUE, include = TRUE}
+
+#Selecting three numeric columns to summarize
+data_pick3 <- select(re_biopics, box_office, number_of_subjects, person_of_color)
+
+#Creating summary statistics and Printing it
+summary_stats <- summary(data_pick3)
+print(summary_stats)
+
+
+#Extra
+#Creating a new table with the extracted summary statistics & Printing it
+
+sum_table <- data.frame(
+  
+  Statistic = c("Minimum Value", "Maximum Value", "Mean Value", "No. of Missing Values"),
+  
+  Box_Office = c(
+    min(data_pick3$box_office), max(data_pick3$box_office), mean(data_pick3$box_office), sum(is.na(data_pick3$box_office))),
+  
+No_of_subjects = c(
+    min(data_pick3$number_of_subjects), max(data_pick3$number_of_subjects), mean(data_pick3$number_of_subjects), sum(is.na(data_pick3$number_of_subjects))),
+
+Person_of_color = c(
+    min(data_pick3$person_of_color), max(data_pick3$person_of_color), mean(data_pick3$person_of_color), sum(is.na(data_pick3$person_of_color)))
+
+  )
+  
+print(sum_table)
+
+```
+
+
+
